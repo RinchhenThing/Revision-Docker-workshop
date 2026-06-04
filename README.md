@@ -457,3 +457,184 @@ Output:
 * **Purpose:** Persist application data independently of the container lifecycle.
 
 This confirms that the application's data is stored in a Docker-managed volume rather than inside the container filesystem.
+
+
+
+## Docker Networking
+
+Docker networks allow containers to communicate with each other using container names or network aliases instead of IP addresses.
+
+### Create a Custom Network
+
+Create a dedicated network for the application and database containers:
+
+```bash
+docker network create todo-app
+```
+
+Output:
+
+```text
+055d4e05e834caf6cb3f76027c89568b34d90a6322ee2243382a17e9ecce0a3d
+```
+
+---
+
+## Start a MySQL Container
+
+Run a MySQL container connected to the `todo-app` network.
+
+```bash
+docker run -d \
+    --network todo-app \
+    --network-alias mysql \
+    -v todo-mysql-data:/var/lib/mysql \
+    -e MYSQL_ROOT_PASSWORD=secret \
+    -e MYSQL_DATABASE=todos \
+    mysql:8.0
+```
+
+Since the image was not available locally, Docker downloaded it automatically.
+
+Output (truncated):
+
+```text
+Unable to find image 'mysql:8.0' locally
+8.0: Pulling from library/mysql
+...
+Status: Downloaded newer image for mysql:8.0
+
+83958e8c0df6b0a31ae996327334146b2d7eedef603a95af6de367179b3e12db
+```
+
+### Configuration Details
+
+* **Network:** `todo-app`
+* **Network Alias:** `mysql`
+* **Volume:** `todo-mysql-data`
+* **Root Password:** `secret`
+* **Database:** `todos`
+
+---
+
+## Connect to the MySQL Container
+
+Initially, an attempt was made using a placeholder container ID:
+
+```bash
+docker exec -it <mysql-container-id> mysql -u root -p
+```
+
+Output:
+
+```text
+bash: mysql-container-id: No such file or directory
+```
+
+The actual container ID must be used.
+
+### Verify Running Containers
+
+```bash
+docker ps
+```
+
+Output:
+
+```text
+CONTAINER ID   IMAGE             PORTS                      NAMES
+83958e8c0df6   mysql:8.0         3306/tcp, 33060/tcp       sad_dirac
+cdc9bc369751   getting-started   127.0.0.1:3000->3000/tcp  frosty_bose
+```
+
+### Open a MySQL Shell
+
+```bash
+docker exec -it 83958e8c0df6 mysql -u root -p
+```
+
+Enter the password:
+
+```text
+secret
+```
+
+### Verify the Database
+
+```sql
+SHOW DATABASES;
+```
+
+Output:
+
+```text
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| todos              |
++--------------------+
+```
+
+The `todos` database was automatically created using the `MYSQL_DATABASE=todos` environment variable.
+
+Exit MySQL:
+
+```sql
+exit
+```
+
+---
+
+## Test Network Connectivity
+
+Run a temporary troubleshooting container on the same Docker network.
+
+```bash
+docker run -it --network todo-app nicolaka/netshoot
+```
+
+Docker downloaded the image because it was not available locally.
+
+Once inside the container, test DNS resolution:
+
+```bash
+dig mysql
+```
+
+Output:
+
+```text
+;; ANSWER SECTION:
+mysql.          600     IN      A       172.18.0.2
+```
+
+### Result
+
+Docker successfully resolved the hostname `mysql` to the MySQL container's IP address.
+
+This works because the MySQL container was started with:
+
+```bash
+--network-alias mysql
+```
+
+Any container connected to the `todo-app` network can now communicate with MySQL using:
+
+```text
+mysql:3306
+```
+
+instead of needing to know the container's IP address.
+
+Exit the troubleshooting container:
+
+```bash
+exit
+```
+
+---
+
