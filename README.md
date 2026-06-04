@@ -638,3 +638,250 @@ exit
 
 ---
 
+
+
+## Docker Compose
+
+Docker Compose allows multiple containers to be defined and managed using a single configuration file (`compose.yaml`).
+
+### Create the Compose Configuration
+
+Verify the compose file:
+
+```bash
+cat compose.yaml
+```
+
+Output:
+
+```yaml
+services:
+  app:
+    image: node:24-alpine
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - 127.0.0.1:3000:3000
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      MYSQL_HOST: msql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_DB: todos
+
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: todos
+
+volumes:
+  todo-mysql-data:
+```
+
+---
+
+## Stop and Remove Existing Containers
+
+Check running containers:
+
+```bash
+docker ps
+```
+
+Output:
+
+```text
+CONTAINER ID   IMAGE             NAMES
+83958e8c0df6   mysql:8.0         sad_dirac
+cdc9bc369751   getting-started   frosty_bose
+```
+
+Attempting to remove running containers directly results in an error:
+
+```bash
+docker rm 83958e8c0df6 cdc9bc369751
+```
+
+Output:
+
+```text
+Error response from daemon: container is running
+```
+
+Stop the containers first:
+
+```bash
+docker stop 83958e8c0df6 cdc9bc369751
+```
+
+Remove them:
+
+```bash
+docker rm 83958e8c0df6 cdc9bc369751
+```
+
+---
+
+## Start the Application Stack
+
+Launch all services defined in `compose.yaml`:
+
+```bash
+docker compose up --build -d
+```
+
+Output:
+
+```text
+✔ Image node:24-alpine Pulled
+✔ Network getting-started-app_default Created
+✔ Volume getting-started-app_todo-mysql-data Created
+✔ Container getting-started-app-app-1 Started
+✔ Container getting-started-app-mysql-1 Started
+```
+
+Docker Compose automatically:
+
+* Created a network for inter-container communication.
+* Created a persistent volume for MySQL.
+* Started the application container.
+* Started the MySQL container.
+
+---
+
+## View Logs from All Services
+
+```bash
+docker compose logs -f
+```
+
+Important events observed:
+
+### MySQL Initialization
+
+```text
+[Entrypoint]: Creating database todos
+```
+
+MySQL successfully created the `todos` database.
+
+### Application Startup
+
+```text
+[nodemon] starting `node src/index.js`
+```
+
+The application container started successfully.
+
+---
+
+## Application Connection Failure
+
+The application repeatedly displayed:
+
+```text
+Waiting for msql:3306.......
+Timeout
+```
+
+This indicates that the application could not connect to the MySQL service.
+
+### Cause
+
+In the compose file:
+
+```yaml
+environment:
+  MYSQL_HOST: msql
+```
+
+However, the MySQL service is named:
+
+```yaml
+mysql:
+```
+
+Docker Compose automatically creates DNS entries using the service name.
+
+Therefore:
+
+```text
+mysql
+```
+
+is valid, but
+
+```text
+msql
+```
+
+is not.
+
+The application was attempting to connect to a hostname that does not exist.
+
+### Fix
+
+Update the environment variable:
+
+```yaml
+environment:
+  MYSQL_HOST: mysql
+```
+
+Then restart the stack:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+---
+
+## View Logs for a Single Service
+
+To monitor only the application container:
+
+```bash
+docker compose logs -f app
+```
+
+Output:
+
+```text
+Waiting for msql:3306.......
+Timeout
+```
+
+This made it easier to identify the hostname configuration issue.
+
+---
+
+## Remove the Entire Stack
+
+Stop and remove all containers, networks, and volumes:
+
+```bash
+docker compose down -v
+```
+
+Output:
+
+```text
+✔ Container getting-started-app-app-1 Removed
+✔ Container getting-started-app-mysql-1 Removed
+✔ Volume getting-started-app_todo-mysql-data Removed
+✔ Network getting-started-app_default Removed
+```
+
+### What Was Removed?
+
+* Application container
+* MySQL container
+* Docker network
+* MySQL data volume
+
+The `-v` flag ensures that volumes are removed as well.
