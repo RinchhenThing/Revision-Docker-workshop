@@ -185,3 +185,93 @@ CONTAINER ID   IMAGE             PORTS                      NAMES
 
 This confirms that the old container was replaced with a new container created from the updated Docker image.
 
+
+
+## Push Docker Image to Docker Hub
+
+To push an image to Docker Hub, the image must first be tagged with your Docker Hub username and repository name.
+
+### Attempt to Push the Local Image
+
+```bash
+docker push rinchhenthing/getting-started:latest
+```
+
+Output:
+
+```text
+The push refers to repository [docker.io/rinchhenthing/getting-started]
+tag does not exist: rinchhenthing/getting-started:latest
+```
+
+The error occurred because no local image existed with the tag `rinchhenthing/getting-started:latest`.
+
+### Verify Existing Images
+
+```bash
+docker images
+```
+
+Output:
+
+```text
+IMAGE                    ID             DISK USAGE   CONTENT SIZE
+getting-started:latest   30d973b7bf9e   306MB        78.2MB
+```
+
+### Tag the Image for Docker Hub
+
+```bash
+docker tag getting-started:latest rinchhenthing/getting-started:latest
+```
+
+This creates a new tag that points to the same image.
+
+### Verify the New Tag
+
+```bash
+docker images
+```
+
+Output:
+
+```text
+IMAGE                                  ID             DISK USAGE   CONTENT SIZE
+getting-started:latest                 30d973b7bf9e   306MB        78.2MB
+rinchhenthing/getting-started:latest   30d973b7bf9e   306MB        78.2MB
+```
+
+Notice that both image names share the same image ID (`30d973b7bf9e`), meaning they reference the same image.
+
+### Push the Tagged Image to Docker Hub
+
+```bash
+docker push rinchhenthing/getting-started:latest
+```
+
+Output:
+
+```text
+The push refers to repository [docker.io/rinchhenthing/getting-started]
+09552ba7698b: Pushed
+6a0ac1617861: Pushed
+eea2c8c31119: Pushed
+c7fd89fde416: Pushed
+414f813165cf: Pushed
+c2f5dc65cfdb: Pushed
+f6ca80bbdbeb: Pushed
+8b6a932c48ed: Pushed
+latest: digest: sha256:30d973b7bf9e210eb0ad225a1db8cfed6376a83bd3b34b93e722035426ac8c6c size: 856
+```
+
+### Result
+
+The image was successfully uploaded to Docker Hub.
+
+**Repository:** `rinchhenthing/getting-started`
+
+**Tag:** `latest`
+
+**Image ID:** `30d973b7bf9e`
+
+**Digest:** `sha256:30d973b7bf9e210eb0ad225a1db8cfed6376a83bd3b34b93e722035426ac8c6c`
