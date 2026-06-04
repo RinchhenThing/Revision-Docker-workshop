@@ -35,11 +35,10 @@ rinchhen-thing@Yat0slptp:~/Documents/new_devops_projects/docker/Docker_workshop/
 rinchhen-thing@Yat0slptp:~/Documents/new_devops_projects/docker/Docker_workshop/getting-started-app$ docker images
                                                                                                                    i Info →   U  In Use
 IMAGE                    ID             DISK USAGE   CONTENT SIZE   EXTRA
-getting-started:latest   4427fc0157e4        306MB         78.2MB        
-rinchhen-thing@Yat0slptp:~/Documents/new_devops_projects/docker/Docker_workshop/getting-started-app$ 
+**getting-started:latest**   **4427fc0157e4**        306MB         78.2MB         
+ 
 
 ```
 
 
-```
 
