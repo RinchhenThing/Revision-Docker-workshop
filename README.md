@@ -71,7 +71,7 @@ afbe6eb8d0f5   getting-started   "docker-entrypoint.s…"   39 seconds ago   Up 
 
 ```
 
-** Container Name:** `getting-started`
-** Container ID: ** `afbe6eb8d0f5`
+**Container Name:** `getting-started`
+**Container ID:** `afbe6eb8d0f5`
 
 
